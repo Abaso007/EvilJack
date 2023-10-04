@@ -14,10 +14,8 @@ render_xyz = False
 
 def get_latest_qr_code():
     qr_code_dir = "evil_qr_codes"
-    qr_code_files = glob.glob(os.path.join(qr_code_dir, "*.png"))
-    if qr_code_files:
-        latest_qr_code = max(qr_code_files, key=os.path.getctime)
-        return latest_qr_code
+    if qr_code_files := glob.glob(os.path.join(qr_code_dir, "*.png")):
+        return max(qr_code_files, key=os.path.getctime)
     return None
 
 def check_strings_in_screenshot(strings_to_check):
@@ -35,11 +33,7 @@ def check_strings_in_screenshot(strings_to_check):
     tool = tools[0]
     txt = tool.image_to_string(screenshot, lang='eng', builder=pyocr.builders.TextBuilder())
 
-    for s in strings_to_check:
-        if s in txt:
-            return True
-
-    return False
+    return any(s in txt for s in strings_to_check)
 
 def background_check():
     global render_xyz
@@ -74,8 +68,7 @@ def xyz_html_rendered():
 
 @app.route('/latest_qr_code')
 def latest_qr_code_image():
-    latest_qr_code = get_latest_qr_code()
-    if latest_qr_code:
+    if latest_qr_code := get_latest_qr_code():
         with open(latest_qr_code, "rb") as file:
             qr_image = base64.b64encode(file.read()).decode('utf-8')
             return jsonify({"qr_image": qr_image, "xyz_html_rendered": render_xyz})
